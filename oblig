@@ -1,0 +1,257 @@
+#Oppgave 1
+#kode som finner minste mulige h
+
+#importing libraries
+import numpy as np
+
+def f(x):
+    # Definerer f
+    return np.e**x 
+
+def f_derivert(f, x, h):
+    return (f(x + h) - f(x)) / h
+
+def minste_h(f, x, threshold=1e-10):
+    h = 0.1
+    while True:
+        approx = f_derivert(f, x, h)
+        if abs(approx) < threshold:
+            break
+        h /= 10
+    return h
+
+x_value = 1.5  # Velg ønsket verdi for x
+minste_h = minste_h(f, x_value)
+print("Den minste verdien h kan ha før det går åt skogs er:", minste_h)
+
+___________________________________________________________________________________________
+
+#Oppgave2
+
+#importing libraries
+import numpy as np
+
+
+def f(x):
+    return np.e**x
+
+def f_derivert(f, x, h):
+    return (f(x + h) - f(x - h))/ (2 * h)
+
+
+def minste_h(f, x, threshold=1e-13):
+    h = 0.1
+    while True:
+        approx = f_derivert(f, x, h)
+        if abs(approx) < threshold:
+            break
+        h /= 10
+    return h
+
+x_value = 1.5 
+minste_h = minste_h(f, x_value)
+print("Den minste verdien h kan ha før det går åt skogs er:", minste_h)
+
+__________________________________________________________________________________________
+
+
+#Oppgave3
+
+#importing libraries
+import numpy as np
+
+def f(x):
+    return np.e**x
+
+def f_derivert(f, x, h):
+    return (f(x-(2*h))-(8*f(x-h)) + (8*f(x+h)) - f(x+2*h))/12*h
+
+
+def minste_h(f, x, threshold=1e-11):
+    h = 0.1
+    while True:
+        approx = f_derivert(f, x, h)
+        if abs(approx) < threshold:
+            break
+        h /= 10
+    return h
+
+x_value = 1.5 
+minste_h = minste_h(f, x_value)
+print("Den minste verdien h kan ha før det går åt skogs er:", minste_h)
+____________________________________________________________________________________________
+
+
+#Oppgave4
+
+#solving heat equation using explicit method
+#Source \: Shameel Abdulla
+#importing libraries
+import numpy as np
+import matplotlib.pyplot as plt
+
+#defining parameters
+h = 0.25
+k = 0.04
+
+#defining boundaries and initialConditions
+x = np.arange(0, 1+h, h)
+t = np.arange(0, 0.1+k, k)
+BoundaryConditions = [0, 0]
+InitialConditions = np.sin(x)
+
+#Creating T Matrix
+n = len(x)
+m = len(t)
+T = np.zeros((n, m))
+
+
+T[0, :] = BoundaryConditions[0]
+T[-1, :] = BoundaryConditions[1]
+T[:, 0] = InitialConditions
+factor = k/h**2
+
+#defining function with the explicit method
+
+def explicit(k, h, m ,n):
+    for j in range(1, m):
+        for i in range (1, n-1):
+            T[i, j] = factor*T[i-1, j-1] + (1-2*factor)*T[i, j-1] + factor * T[i+1, j-1]
+    return T
+
+print(T.round(3))
+
+#plotting the graph
+for j in range(m):
+    plt.plot(x, T[:, j], label=f"Time step {j}")
+plt.xlabel("Distanse [m]")
+plt.ylabel("Temperatur [grader C]")
+plt.legend([f"t - {value} s" for value in t])
+plt.show()
+
+
+____________________________________________________________________________________________
+
+
+#Oppgave5
+
+#kilde: https://www.youtube.com/watch?v=2b4Q_uE4zhk
+#solving heat equation using implicit method
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+h = 0.25
+k = 0.04
+x = np.arange(1, 1+h, h)
+t = np.arange(0, 1+k, k)
+
+grenseverdi = [0, 0]
+initialkrav = np.sin(np.pi*x)
+
+n = len(x)
+m = len(t)
+
+T = np.zeros((n, m))
+
+T[0, :] = grenseverdi[0]
+T[-1, :] = grenseverdi[1]
+T[:, 0] = initialkrav
+
+
+factor = k/h**2
+
+def implicit():
+    
+    A = np.diag([1 + 2*factor]*n, 0) + np.diag([-factor]*(n-1), -1) + np.diag([-factor]*(n-1), 1)
+    for j in range(1, m):
+        b = T[1:-1,j-1 ].copy()
+        b[0] = b[0] + factor*T[0 , j]
+        b[-1] = b[-1] + factor*T[-1, j]
+        solution = np.linalg.solve(A,b)
+        T[1:-1,j] = solution
+        print(solution)
+    return T
+        
+
+print(T.round(3))
+    
+    
+#plotting the graph
+
+R = np.linspace(1, 0, m)
+B = np.linspace(0, 1, m)
+G = 0
+for j in range(m):
+    plt.plot(x, T[:,j], color = [R[j], G, B[j]])
+    
+    
+plt.xlabel("Distance [m]")
+plt.ylabel("Temperatur[grader C]")
+plt.legend([f"t= {value} s" for value in t])
+plt.show()
+
+
+__________________________________________________________________________________________
+
+#Oppgave6
+
+#Kode som løser varmeligningen ved hjelp av Crank Nicholson-metoden
+#Med god hjelp fra Shameel Abdulla: https://www.youtube.com/watch?v=y0C3ew3tk2A&t=7s
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+#definerer variablene og parameterne mine
+h = 0.25
+k = 0.04
+x = np.arange(0, 1+h, h)
+t = np.arange(0, 0.1+k, k).round(3)
+grenseverdier =[0, 0]
+initialkrav = np.sin(np.pi*x)
+
+#setter opp matrise
+n = len(x)
+m = len(t)
+T = np.zeros((n,m))
+
+#setter grenseverdi og initialkrav
+T[0,:] = grenseverdier[0]
+T[-1,:] = grenseverdier[1]
+T[:,0] = initialkrav
+
+
+#definerer lambda som factor
+factor = k/h**2
+
+#oppretter matrise A og B for å beregne den numeriske ligningen
+A = np.diag([2+2*factor]*(n-2), 0) + np.diag([-factor]*(n-3) , -1) + np.diag([-factor]*(n-3) , 1)
+B = np.diag([2-2*factor]*(n-2), 0) + np.diag([factor]*(n-3) , -1) + np.diag([factor]*(n-3) , 1)
+
+
+#bruker for-loop til å løse differensiallikningen numeriske ved å iterere gjennom tid
+for j in range(0, m-1):
+    b = T[1: -1, j].copy()
+    b = np.dot(B, b)
+    b[0] = b[0] + factor*(T[0, j] + T[0, j+1])
+    b[-1] = b[-1] + factor *(T[-1, j] + T[-1, j+1])
+    solution = np.linalg.solve(A, b)
+    
+    T[1:-1, j+1] = solution
+      
+print(T.round(3))
+
+#plotting av resultater
+
+R = np.linspace(1, 0, m)
+B = np.linspace(0, 1, m)
+G = 0
+for j in range(m):
+    plt.plot(x, T[:,j], color = [R[j], G, B[j]])
+    
+plt.xlabel("distanse [m]")
+plt.ylabel("Temperatur [grader C]")
+plt.legend([f't = {value} s' for value in t])
+
+plt.show()
+__________________________________________________________________________________________
